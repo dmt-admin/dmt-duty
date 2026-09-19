@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMT — Daily Duty Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@300;400;500;600;700&display=swap');
+:root {
+  --navy:#0d2137;--blue:#1a4a8a;--gold:#c9972a;--light:#eaf1fb;--bg:#f0f4fa;
+  --white:#fff;--bdr:#cdd8ec;--txt:#192840;--muted:#6b80a3;
+  --green:#1a7a4a;--gbg:#e6f4ed;--amber:#b05c00;--abg:#fef0e0;
+  --red:#991818;--rbg:#fdeaea;--sh:0 2px 12px rgba(13,33,55,0.10);--r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans Tamil',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;}
+.hdr{background:linear-gradient(160deg,var(--navy) 0%,#1e3f72 100%);color:#fff;box-shadow:var(--sh);position:sticky;top:0;z-index:50;}
+.hdr-top{max-width:780px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;gap:14px;}
+.hdr-icon{width:48px;height:48px;flex-shrink:0;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.hdr-title{font-size:16px;font-weight:700;}
+.hdr-sub{font-size:12px;opacity:0.65;margin-top:3px;}
+.tabs{border-top:1px solid rgba(255,255,255,0.12);display:flex;max-width:780px;margin:0 auto;}
+.tab{flex:1;padding:11px 0;color:rgba(255,255,255,0.55);font-size:13px;font-weight:600;text-align:center;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;font-family:inherit;transition:all .2s;}
+.tab:hover{color:#fff;}.tab.on{color:var(--gold);border-bottom-color:var(--gold);}
+.main{max-width:780px;margin:0 auto;padding:22px 16px 40px;}
+.panel{display:none;}.panel.on{display:block;}
+.card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--bdr);padding:22px;margin-bottom:16px;}
+.card-hd{font-size:13px;font-weight:700;color:var(--blue);padding-bottom:12px;margin-bottom:18px;border-bottom:1.5px solid var(--light);display:flex;align-items:center;gap:8px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.row1{margin-bottom:14px;}
+.fg{display:flex;flex-direction:column;gap:6px;}
+.fg label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.fg input,.fg select,.fg textarea{padding:10px 13px;border:1.5px solid var(--bdr);border-radius:8px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fff;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,74,138,0.12);}
+.fg textarea{resize:vertical;min-height:68px;line-height:1.5;}
+.locked{pointer-events:none;background:#f0f4fa !important;color:var(--muted) !important;cursor:not-allowed;}
+/* TIME ERROR */
+.time-err{font-size:11.5px;color:var(--red);margin-top:4px;display:none;padding:4px 8px;background:var(--rbg);border-radius:6px;}
+/* TASK BLOCK */
+.tblock{background:var(--light);border:1.5px solid #c2d3ed;border-radius:10px;padding:16px;margin-bottom:12px;}
+.tblock-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;}
+.tnum{font-size:11px;font-weight:800;color:var(--blue);background:#fff;border:1px solid var(--bdr);padding:3px 12px;border-radius:20px;}
+.del-btn{background:var(--rbg);color:var(--red);border:1px solid #f0b0b0;border-radius:7px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.del-btn:hover{background:#f8d0d0;}
+/* TEMPLATES */
+.template-wrap{margin-bottom:10px;}
+.template-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;}
+.template-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{padding:5px 12px;background:#fff;border:1.5px solid var(--bdr);border-radius:20px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;font-family:inherit;transition:all .15s;}
+.chip:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+/* LEAVE */
+.leave-btn{width:100%;padding:14px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#b05c00,#7a3d00);color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.leave-btn:hover{opacity:.9;}
+.leave-active{background:linear-gradient(135deg,#1a7a4a,#0d4a2a) !important;}
+.add-btn{width:100%;padding:12px;background:#fff;border:2px dashed #4a7cc0;border-radius:10px;color:var(--blue);font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px;}
+.add-btn:hover{background:var(--light);}
+.btn{display:block;width:100%;padding:14px;font-size:15px;font-weight:700;background:linear-gradient(135deg,#1d55a0,var(--navy));color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(13,33,55,0.22);}
+.btn:hover{opacity:.92;}.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn-sec{display:block;width:100%;padding:12px;font-size:14px;font-weight:700;background:white;color:var(--blue);border:2px solid var(--blue);border-radius:10px;cursor:pointer;font-family:inherit;margin-top:10px;}
+.alert{padding:14px 16px;border-radius:9px;font-size:13.5px;margin-bottom:16px;line-height:1.55;}
+.ok{background:var(--gbg);color:var(--green);border:1px solid #9dd4b5;}
+.err{background:var(--rbg);color:var(--red);border:1px solid #f0a0a0;}
+.warn{background:#fffbe6;color:#7a5800;border:1px solid #f0d060;}
+.info{background:var(--light);color:var(--blue);border:1px solid var(--bdr);}
+/* STATUS */
+.status-card{border-radius:var(--r);padding:24px;text-align:center;margin-bottom:16px;}
+.status-pending{background:#fffbe6;border:2px solid #f0d060;}
+.status-approved{background:var(--gbg);border:2px solid #9dd4b5;}
+.status-rejected{background:var(--rbg);border:2px solid #f0a0a0;}
+.status-icon{font-size:40px;margin-bottom:10px;}
+.status-title{font-size:16px;font-weight:700;margin-bottom:6px;}
+.status-desc{font-size:13px;opacity:0.8;line-height:1.6;}
+/* HISTORY */
+.hist-hdr{background:linear-gradient(140deg,var(--navy) 0%,#1e4278 100%);border-radius:var(--r);padding:22px 24px;color:#fff;text-align:center;margin-bottom:16px;}
+.hist-name{font-size:18px;font-weight:700;margin-bottom:4px;}
+.hist-total{font-size:13px;opacity:.7;margin-top:6px;}
+.sum-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.sum-box{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:16px 10px;text-align:center;}
+.sum-box .sv{font-size:30px;font-weight:800;}.sum-box .sl{font-size:12px;color:var(--muted);margin-top:4px;font-weight:600;}
+.sum-box.g{border-color:#9dd4b5;}.sum-box.g .sv{color:var(--green);}
+.sum-box.a{border-color:#f0c080;}.sum-box.a .sv{color:var(--amber);}
+.sum-box.r{border-color:#f0a0a0;}.sum-box.r .sv{color:var(--red);}
+.twrap{overflow-x:auto;border-radius:8px;border:1px solid var(--bdr);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:var(--navy);color:#fff;padding:10px 13px;text-align:left;font-size:11.5px;font-weight:600;}
+td{padding:10px 13px;border-bottom:1px solid #eaf0f8;vertical-align:top;}
+tr:last-child td{border-bottom:none;}tr:hover td{background:var(--light);}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+.bc{background:var(--gbg);color:var(--green);}.bi{background:var(--abg);color:var(--amber);}.bp{background:var(--rbg);color:var(--red);}.bl{background:#f0f4fa;color:#6b80a3;}
+.cat{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#e8f0fb;color:#1a4a8a;margin-left:4px;}
+.cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--gold);color:var(--navy);border-radius:10px;font-size:10.5px;font-weight:800;padding:0 5px;margin-left:6px;}
+.prio{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;margin-left:6px;}
+.prio-low{background:#e8f0fb;color:#1a4a8a;}.prio-medium{background:var(--abg);color:var(--amber);}.prio-high{background:var(--rbg);color:var(--red);}
+.assign-card{background:var(--light);border:1.5px solid #c2d3ed;border-radius:10px;padding:16px;margin-bottom:12px;}
+.assign-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+.assign-desc{font-size:13.5px;line-height:1.5;margin-bottom:8px;}
+.assign-meta{font-size:11.5px;color:var(--muted);margin-bottom:10px;}
+.assign-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-xs{padding:6px 14px;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer;font-family:inherit;border:none;}
+.btn-start{background:var(--light);color:var(--blue);border:1px solid var(--bdr) !important;}
+.btn-done{background:var(--gbg);color:var(--green);border:1px solid #9dd4b5 !important;}
+@media(max-width:580px){.row2,.sum-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-icon">🏛️</div>
+    <div>
+      <div class="hdr-title">Department of Motor Traffic</div>
+      <div class="hdr-sub">Daily Duty Report System</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="t1" onclick="go('home',this)">🏠 Home</button>
+    <button class="tab"    id="t2" onclick="go('submit',this)">📝 Report</button>
+    <button class="tab"    id="t4" onclick="go('assigned',this)">📌 My Tasks <span class="cnt" id="assigned-cnt" style="display:none"></span></button>
+    <button class="tab"    id="t3" onclick="go('history',this)">📋 History</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- HOME -->
+  <div class="panel on" id="p-home">
+    <div id="home-msg"></div>
+    <div id="section-register">
+      <div class="card">
+        <div class="card-hd">👤 Staff Registration</div>
+        <div class="alert info">📋 First-time users should register here. You can submit duty reports once your supervisor approves your request.</div>
+        <div class="row2">
+          <div class="fg"><label>Full Name *</label><input id="reg-name" type="text" placeholder="Your name"></div>
+          <div class="fg"><label>NIC No / NIC *</label><input id="reg-nic" type="text" placeholder="199512300456"></div>
+        </div>
+        <div class="row1">
+          <div class="fg">
+            <label>Designation *</label>
+            <select id="reg-post">
+              <option value="">— — Select Designation — —</option>
+              <option>Development Officer</option>
+              <option>Management Service Officer</option>
+              <option>Public Management Assistant</option>
+              <option>Examiner of Motor Vehicles</option>
+              <option>Other officers performing duties under the above posts</option>
+            </select>
+          </div>
+        </div>
+        <div class="row1">
+          <div class="fg">
+            <label>Section *</label>
+            <select id="reg-branch">
+              <option value="">— Select Section —</option>
+              <option>Section 1</option><option>Section 2</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" id="reg-btn" onclick="submitRegistration()">📤 Send Registration Request</button>
+        <button class="btn-sec" onclick="checkMyStatus()">🔍 Check My Registration Status</button>
+      </div>
+    </div>
+    <div id="section-status" style="display:none"></div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="panel" id="p-submit">
+    <div id="submit-msg"></div>
+    <div class="card">
+      <div class="card-hd">👤 Staff Details</div>
+      <div class="row2">
+        <div class="fg"><label>Full Name</label><input id="sname" type="text" class="locked" readonly></div>
+        <div class="fg"><label>NIC No / NIC</label><input id="snic" type="text" class="locked" readonly></div>
+      </div>
+      <div class="row1"><div class="fg"><label>Designation</label><input id="spost" type="text" class="locked" readonly></div></div>
+      <div class="row1"><div class="fg"><label>Section</label><input id="sbranch" type="text" class="locked" readonly></div></div>
+      <div class="row1"><div class="fg"><label>Report Date</label><input id="sdate" type="date" class="locked"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">📋 Today's Tasks</div>
+      <button class="leave-btn" id="leave-btn" onclick="toggleLeave()">🏖️ On Leave Today / Leave</button>
+      <div id="tasks-section">
+        <div id="tasks"></div>
+        <button class="add-btn" onclick="addTask()">＋ Add Another Task</button>
+        <button class="btn" id="sbtn" onclick="submitDuty()">✅ Submit Report</button>
+      </div>
+      <div id="leave-section" style="display:none">
+        <div class="alert warn">🏖️ Marked as on leave.</div>
+        <div class="row1">
+          <div class="fg">
+            <label>Leave Type *</label>
+            <select id="leave-type">
+              <option value="">— Select —</option>
+              //<option value="Annual Leave">Annual Leave (Annual Leave)</option>
+              <option value="Medical Leave">Medical Leave (Medical Leave)</option>
+              <option value="Casual Leave">Casual Leave (Casual Leave)</option>
+              <option value="Official Duty">Official Duty Leave(Duty) Leave)</option>
+              <option value="Public Holiday">Public Holiday (Public Holiday)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" id="lbtn" onclick="submitLeave()">✅ Submit Leave</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSIGNED TASKS -->
+  <div class="panel" id="p-assigned">
+    <div id="assigned-msg"></div>
+    <div class="card">
+      <div class="card-hd">📌 Tasks Assigned to Me <span class="refresh-lnk" id="assigned-refresh" onclick="loadAssignedTasks()" style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600">⟳ Refresh</span></div>
+      <div id="assigned-list"><div style="text-align:center;padding:30px;color:var(--muted)">Register and get approved to see tasks assigned by your supervisor here.</div></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="panel" id="p-history">
+    <div id="hist-msg"></div>
+    <div class="card">
+      <div class="card-hd">🔍 View Task History</div>
+      <div class="alert info">🔒 History will only be shown if both your name and NIC match exactly.</div>
+      <div class="row2" style="margin-bottom:14px">
+        <div class="fg"><label>Name *</label><input id="lname" type="text" placeholder="Your name"></div>
+        <div class="fg"><label>NIC No / NIC *</label><input id="lnic" type="text" placeholder="Your NIC"></div>
+      </div>
+      <button class="btn" onclick="lookupHistory()">🔍 View History</button>
+    </div>
+    <div id="history-out"></div>
+  </div>
+
+</div>
+
+<script>
+// ⚠️ Replace this with YOUR new DMT Apps Script Web App URL after deployment (see SETUP.md)
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaesJ-fH8lB64kBzhYNSWWN9syk29m1GgCxJSCLxIF9iz-_Ug5r8C_R1XNrTEV5mc/exec';
+
+const TEMPLATES = {
+  'Office Work': ['Preparing files','Writing letters','Preparing reports','Recording information','Verifying documents','Phone follow-up'],
+  'Field Work':      ['Field survey','On-site inspection','Home visit','Site inspection','Sample collection'],
+  'Meeting':     ['Department meeting','HOD meeting','Public/user meeting','Project review meeting'],
+  'Inspection Work':  ['Audit','Inspection report','Data analysis','Verifying documents'],
+  'Training':    ['In-office training','External training','Online training'],
+  'General Work':   ['Public event','Urgent task','Other tasks']
+};
+const CATEGORIES = Object.keys(TEMPLATES);
+
+let tc       = 0;
+let staffInfo = null;
+let isLeave  = false;
+
+// ─── TABS ─────────────────────────────────────
+function go(panel, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  document.getElementById('p-' + panel).classList.add('on');
+  btn.classList.add('on');
+  if (panel === 'assigned' && staffInfo) loadAssignedTasks();
+}
+
+// ─── INIT ─────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  const dateEl = document.getElementById('sdate');
+  dateEl.value = today;
+  dateEl.setAttribute('min', today);
+  dateEl.setAttribute('max', today);
+
+  const saved = localStorage.getItem('dmt_staff_v1');
+  if (saved) {
+    staffInfo = JSON.parse(saved);
+    prefillAll();
+    autoCheckStatus();
+    refreshAssignedCount();
+  }
+  addTask();
+});
+
+function prefillAll() {
+  if (!staffInfo) return;
+  ['reg-name','sname','lname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=staffInfo.name||'';});
+  ['reg-nic','snic','lnic'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=staffInfo.nic||'';});
+  ['reg-post','spost'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=staffInfo.post||'';});
+  ['reg-branch','sbranch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=staffInfo.branch||'';});
+}
+
+async function autoCheckStatus() {
+  if (!staffInfo) return;
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=checkStatus&name=${encodeURIComponent(staffInfo.name)}&nic=${encodeURIComponent(staffInfo.nic)}`);
+    const d = await r.json();
+    if      (d.status==='Approved') showApprovedStatus();
+    else if (d.status==='Pending')  showPendingStatus();
+    else if (d.status==='Rejected') showRejectedStatus(d.remark);
+  } catch {}
+}
+
+// ─── REGISTRATION ──────────────────────────────
+async function submitRegistration() {
+  const msg=document.getElementById('home-msg');
+  const name=document.getElementById('reg-name').value.trim();
+  const nic=document.getElementById('reg-nic').value.trim();
+  const post=document.getElementById('reg-post').value;
+  const branch=document.getElementById('reg-branch').value;
+  if (!name||!nic||!post||!branch){msg.innerHTML=`<div class="alert err">⚠️ All fields are required.</div>`;return;}
+  const btn=document.getElementById('reg-btn');
+  btn.disabled=true;btn.textContent='⏳ Sending…';
+  try {
+    // no-cors mode — response can't be read, but it still saves to the Sheet
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action:'register', name, nic, post, branch})
+    });
+    // Submitted — now check status
+    staffInfo = {name, nic, post, branch};
+    localStorage.setItem('dmt_staff_v1', JSON.stringify(staffInfo));
+    prefillAll();
+    msg.innerHTML = `<div class="alert ok">✅ Registration request sent! Please wait for your supervisor to approve it.</div>`;
+    showPendingStatus();
+  } catch(e) {
+    msg.innerHTML = `<div class="alert err">❌ Error: ${e.message}</div>`;
+  }
+  finally {btn.disabled=false; btn.textContent='📤 Send Registration Request';}
+}
+
+async function checkMyStatus() {
+  const name=document.getElementById('reg-name').value.trim();
+  const nic=document.getElementById('reg-nic').value.trim();
+  const msg=document.getElementById('home-msg');
+  if (!name||!nic){msg.innerHTML=`<div class="alert err">⚠️ Please enter your name and NIC.</div>`;return;}
+  try {
+    const r=await fetch(`${SCRIPT_URL}?action=checkStatus&name=${encodeURIComponent(name)}&nic=${encodeURIComponent(nic)}`);
+    const d=await r.json();
+    staffInfo={name,nic,post:document.getElementById('reg-post').value,branch:document.getElementById('reg-branch').value};
+    localStorage.setItem('dmt_staff_v1',JSON.stringify(staffInfo));prefillAll();
+    if(d.status==='Approved')showApprovedStatus();
+    else if(d.status==='Pending')showPendingStatus();
+    else if(d.status==='Rejected')showRejectedStatus(d.remark);
+    else msg.innerHTML=`<div class="alert warn">⚠️ No registration found.</div>`;
+  } catch {msg.innerHTML=`<div class="alert err">❌ Please check your internet connection.</div>`;}
+}
+
+function showPendingStatus() {
+  document.getElementById('section-register').style.display='none';
+  document.getElementById('section-status').style.display='block';
+  document.getElementById('section-status').innerHTML=`
+    <div class="status-card status-pending">
+      <div class="status-icon">⏳</div>
+      <div class="status-title">Request Pending</div>
+      <div class="status-desc">Please wait for your supervisor to approve your request.</div>
+    </div>
+    <button class="btn-sec" onclick="autoCheckStatus()" style="max-width:300px;margin:0 auto;display:block">🔄 Refresh Status</button>`;
+}
+
+function showApprovedStatus() {
+  document.getElementById('section-register').style.display='none';
+  document.getElementById('section-status').style.display='block';
+  document.getElementById('section-status').innerHTML=`
+    <div class="status-card status-approved">
+      <div class="status-icon">✅</div>
+      <div class="status-title">You have been approved!</div>
+      <div class="status-desc">You can now submit your daily duty report.</div>
+    </div>
+    <button class="btn" onclick="goToSubmit()" style="max-width:300px;margin:10px auto 0;display:block">📝 Submit Duty Report →</button>`;
+}
+
+function showRejectedStatus(remark) {
+  document.getElementById('section-register').style.display='none';
+  document.getElementById('section-status').style.display='block';
+  document.getElementById('section-status').innerHTML=`
+    <div class="status-card status-rejected">
+      <div class="status-icon">❌</div>
+      <div class="status-title">Request Rejected</div>
+      <div class="status-desc">Please contact your supervisor.${remark?'<br>Remark: '+remark:''}</div>
+    </div>
+    <button class="btn-sec" onclick="resetReg()" style="max-width:300px;margin:10px auto 0;display:block">🔄 Register Again</button>`;
+}
+
+function resetReg(){localStorage.removeItem('dmt_staff_v1');staffInfo=null;document.getElementById('section-register').style.display='block';document.getElementById('section-status').style.display='none';document.getElementById('home-msg').innerHTML='';}
+function goToSubmit(){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.getElementById('p-submit').classList.add('on');document.getElementById('t2').classList.add('on');}
+
+// ─── LEAVE ─────────────────────────────────────
+function toggleLeave() {
+  isLeave=!isLeave;
+  const btn=document.getElementById('leave-btn');
+  if (isLeave){btn.classList.add('leave-active');btn.innerHTML='✅ Marked as on leave';document.getElementById('tasks-section').style.display='none';document.getElementById('leave-section').style.display='block';}
+  else{btn.classList.remove('leave-active');btn.innerHTML='🏖️ On Leave Today / Leave';document.getElementById('tasks-section').style.display='block';document.getElementById('leave-section').style.display='none';}
+}
+
+// ─── TIME VALIDATION ───────────────────────────
+// ✅ Cannot record a time later than the current time
+function validateTime(input) {
+  const now  = new Date();
+  const nowH = now.getHours();
+  const nowM = now.getMinutes();
+  if (!input.value) return;
+  const parts = input.value.split(':');
+  const h = parseInt(parts[0]);
+  const m = parseInt(parts[1]);
+  const err = input.parentElement.querySelector('.time-err');
+
+  if (h > nowH || (h === nowH && m > nowM)) {
+    input.value = '';
+    if (err) {
+      err.textContent = `⚠️ Current time is ${nowH}:${String(nowM).padStart(2,'0')} — you cannot record a later time than this.`;
+      err.style.display = 'block';
+      setTimeout(() => { err.style.display = 'none'; }, 4000);
+    }
+  }
+}
+
+// ─── TASK MANAGEMENT ──────────────────────────
+function addTask() {
+  tc++;
+  const c=document.getElementById('tasks');
+  const d=document.createElement('div');
+  d.className='tblock';d.id='tk'+tc;
+  const n=tc;
+  const chipsHTML=CATEGORIES.map(cat=>`<button class="chip" onclick="fillTemplate(${n},'${cat}',event)">${cat}</button>`).join('');
+  d.innerHTML=`
+    <div class="tblock-top">
+      <span class="tnum">Task ${n}</span>
+      ${n>1?`<button class="del-btn" onclick="document.getElementById('tk${n}').remove()">✕ Remove</button>`:''}
+    </div>
+    <div class="template-wrap">
+      <div class="template-label">📌 Select Category / Template</div>
+      <div class="template-chips">${chipsHTML}</div>
+    </div>
+    <div class="row2" style="margin-bottom:12px">
+      <div class="fg">
+        <label>Task Category (Category) *</label>
+        <select class="tcat">
+          <option value="">— Select Category —</option>
+          ${CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg">
+        <label>Status *</label>
+        <select class="tstatus">
+          <option value="">— Select —</option>
+          <option value="Completed">✅ Completed</option>
+          <option value="In Progress">🔄 In Progress</option>
+          <option value="Pending">⏳ Pending</option>
+        </select>
+      </div>
+    </div>
+    <div class="row1">
+      <div class="fg">
+        <label>Task Description *</label>
+        <textarea class="td" placeholder="Briefly describe the work done today…"></textarea>
+      </div>
+    </div>
+    <div class="row1">
+      <div class="fg">
+        <label>Start Time</label>
+        <input type="time" class="ts" onchange="validateTime(this)">
+        <div class="time-err"></div>
+      </div>
+    </div>`;
+  c.appendChild(d);
+}
+
+function fillTemplate(n, category, event) {
+  const block=document.getElementById('tk'+n);if(!block)return;
+  block.querySelector('.tcat').value=category;
+  const templates=TEMPLATES[category]||[];
+  const chipsDiv=block.querySelector('.template-chips');
+  chipsDiv.innerHTML=templates.map(t=>`<button class="chip" onclick="setTask(${n},'${t}','${category}')">${t}</button>`).join('')+
+    `<button class="chip" style="background:#f0f4fa;color:var(--muted);border-color:var(--bdr)" onclick="resetChips(${n})">← Back</button>`;
+  event.stopPropagation();
+}
+
+function setTask(n,text,cat){const b=document.getElementById('tk'+n);if(!b)return;b.querySelector('.td').value=text;b.querySelector('.tcat').value=cat;resetChips(n);}
+function resetChips(n){const b=document.getElementById('tk'+n);if(!b)return;b.querySelector('.template-chips').innerHTML=CATEGORIES.map(c=>`<button class="chip" onclick="fillTemplate(${n},'${c}',event)">${c}</button>`).join('');}
+
+// ─── DUTY SUBMIT ──────────────────────────────
+async function submitDuty() {
+  const msg=document.getElementById('submit-msg');msg.innerHTML='';
+  if (!staffInfo){msg.innerHTML=`<div class="alert err">⚠️ Please register on the Home page first.</div>`;return;}
+  const date=document.getElementById('sdate').value;
+  const tasks=[];
+  document.querySelectorAll('.tblock').forEach(b=>{
+    const desc=b.querySelector('.td').value.trim();
+    const cat=b.querySelector('.tcat').value;
+    const start=b.querySelector('.ts').value;
+    const status=b.querySelector('.tstatus').value;
+    if(desc&&status)tasks.push({description:desc,category:cat,startTime:start,endTime:'',status});
+  });
+  if(!tasks.length){msg.innerHTML=`<div class="alert err">⚠️ Please fill in at least one task.</div>`;return;}
+
+  // Client-side time validation — final check
+  const now=new Date();
+  const nowStr=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const invalidTask=tasks.find(t=>t.startTime&&t.startTime>nowStr);
+  if(invalidTask){msg.innerHTML=`<div class="alert err">⚠️ Current time is ${nowStr} — you cannot record a later time than this.</div>`;return;}
+
+  const btn=document.getElementById('sbtn');
+  btn.disabled=true;btn.textContent='⏳ Submitting…';
+  try {
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'submitDuty',name:staffInfo.name,nic:staffInfo.nic,post:staffInfo.post,branch:staffInfo.branch,date,tasks})});
+    msg.innerHTML=`<div class="alert ok">✅ <strong>${staffInfo.name}</strong>'s report has been submitted!<br>📋 ${tasks.length} tasks — will appear in your history once your supervisor confirms them.</div>`;
+    document.getElementById('tasks').innerHTML='';tc=0;addTask();window.scrollTo(0,0);
+  } catch {msg.innerHTML=`<div class="alert err">❌ Please check your internet connection.</div>`;}
+  finally{btn.disabled=false;btn.textContent='✅ Submit Report';}
+}
+
+// ─── LEAVE SUBMIT ─────────────────────────────
+async function submitLeave() {
+  const msg=document.getElementById('submit-msg');msg.innerHTML='';
+  if(!staffInfo){msg.innerHTML=`<div class="alert err">⚠️ Please register first.</div>`;return;}
+  const leaveType=document.getElementById('leave-type').value;
+  if(!leaveType){msg.innerHTML=`<div class="alert err">⚠️ Select Leave Type.</div>`;return;}
+  const date=document.getElementById('sdate').value;
+  const btn=document.getElementById('lbtn');
+  btn.disabled=true;btn.textContent='⏳ Saving…';
+  try {
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'submitDuty',name:staffInfo.name,nic:staffInfo.nic,post:staffInfo.post,branch:staffInfo.branch,date,
+        tasks:[{description:leaveType,category:'Leave',startTime:'',endTime:'',status:'Leave'}]})});
+    msg.innerHTML=`<div class="alert ok">✅ Leave recorded — ${leaveType}.</div>`;
+    toggleLeave();window.scrollTo(0,0);
+  } catch {msg.innerHTML=`<div class="alert err">❌ Please check your internet connection.</div>`;}
+  finally{btn.disabled=false;btn.textContent='✅ Submit Leave';}
+}
+
+// ─── HISTORY ──────────────────────────────────
+async function lookupHistory() {
+  const name=document.getElementById('lname').value.trim();
+  const nic=document.getElementById('lnic').value.trim();
+  const out=document.getElementById('history-out');
+  const msg=document.getElementById('hist-msg');
+  if(!name||!nic){msg.innerHTML=`<div class="alert err">⚠️ Both name and NIC are required.</div>`;return;}
+  msg.innerHTML='';
+  out.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted)">⏳ Loading data…</div>`;
+  try {
+    const r=await fetch(`${SCRIPT_URL}?action=myHistory&name=${encodeURIComponent(name)}&nic=${encodeURIComponent(nic)}`);
+    const d=await r.json();
+    if(!d.success){out.innerHTML=`<div class="alert err">❌ ${d.error}</div>`;return;}
+    renderHistory(name,d.summary,d.history);
+  } catch {out.innerHTML=`<div class="alert err">❌ Unable to fetch data.</div>`;}
+}
+
+function renderHistory(name,summary,history) {
+  const rows=history.length
+    ? history.map(h=>{
+        const isL=h.status==='Leave';
+        const bc=isL?'bl':h.status==='Completed'?'bc':h.status==='In Progress'?'bi':'bp';
+        const lbl=isL?'Leave':h.status==='Completed'?'Completed':h.status==='In Progress'?'In progress':'Pending';
+        const time=h.startTime?h.startTime:'—';
+        const catHtml=h.category&&!isL?`<span class="cat">${h.category}</span>`:'';
+        return `<tr>
+          <td style="white-space:nowrap">${h.date}</td>
+          <td>${h.task} ${catHtml}</td>
+          <td style="font-size:12px">${time}</td>
+          <td><span class="badge ${bc}">${lbl}</span></td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="4" style="text-align:center;padding:22px;color:var(--muted)">No approved task history</td></tr>`;
+
+  document.getElementById('history-out').innerHTML=`
+    <div class="hist-hdr">
+      <div class="hist-name">${name}</div>
+      <div class="hist-total">Total ${summary.total} approved entries</div>
+    </div>
+    <div class="sum-row">
+      <div class="sum-box g"><div class="sv">${summary.completed}</div><div class="sl">✅ Completed</div></div>
+      <div class="sum-box a"><div class="sv">${summary.inProgress}</div><div class="sl">🔄 In progress</div></div>
+      <div class="sum-box r"><div class="sv">${summary.pending}</div><div class="sl">⏳ Pending</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">📋 Approved Task History</div>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Date</th><th>Task Description</th><th>Start</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ─── ASSIGNED TASKS ────────────────────────────
+async function refreshAssignedCount() {
+  if (!staffInfo) return;
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=myAssignments&name=${encodeURIComponent(staffInfo.name)}&nic=${encodeURIComponent(staffInfo.nic)}`);
+    const d = await r.json();
+    const openCount = (d.assignments||[]).filter(a=>a.status!=='Completed').length;
+    const badge = document.getElementById('assigned-cnt');
+    if (openCount > 0) { badge.textContent = openCount; badge.style.display = 'inline-flex'; }
+    else { badge.style.display = 'none'; }
+  } catch {}
+}
+
+async function loadAssignedTasks() {
+  const list = document.getElementById('assigned-list');
+  if (!staffInfo) { list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted)">Register and get approved to see tasks assigned by your supervisor here.</div>`; return; }
+  list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted)">⏳ Loading…</div>`;
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=myAssignments&name=${encodeURIComponent(staffInfo.name)}&nic=${encodeURIComponent(staffInfo.nic)}`);
+    const d = await r.json();
+    renderAssignedTasks(d.assignments || []);
+    refreshAssignedCount();
+  } catch { list.innerHTML = `<div class="alert err">❌ Unable to fetch data.</div>`; }
+}
+
+function renderAssignedTasks(assignments) {
+  const list = document.getElementById('assigned-list');
+  if (!assignments.length) { list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted)">✅ No tasks assigned right now.</div>`; return; }
+  // Newest / most urgent first
+  assignments.sort((a,b)=> (a.status==='Completed') - (b.status==='Completed'));
+  list.innerHTML = assignments.map(a => {
+    const prioClass = a.priority==='High'?'prio-high':a.priority==='Medium'?'prio-medium':'prio-low';
+    const statusBadge = a.status==='Completed' ? `<span class="badge bc">✅ Completed</span>`
+      : a.status==='In Progress' ? `<span class="badge bi">🔄 In Progress</span>`
+      : `<span class="badge bp">⏳ Assigned</span>`;
+    let actions = '';
+    if (a.status === 'Assigned') actions = `<button class="btn-xs btn-start" onclick="updateAssignmentStatus(${a.rowIndex},'In Progress')">▶ Start</button>
+      <button class="btn-xs btn-done" onclick="updateAssignmentStatus(${a.rowIndex},'Completed')">✅ Mark Completed</button>`;
+    else if (a.status === 'In Progress') actions = `<button class="btn-xs btn-done" onclick="updateAssignmentStatus(${a.rowIndex},'Completed')">✅ Mark Completed</button>`;
+    return `<div class="assign-card">
+      <div class="assign-top">
+        <div>${statusBadge} <span class="prio ${prioClass}">${a.priority||'Low'} priority</span> ${a.category?`<span class="cat">${a.category}</span>`:''}</div>
+      </div>
+      <div class="assign-desc">${a.task}</div>
+      <div class="assign-meta">📅 Due: ${a.dueDate||'—'} &nbsp;|&nbsp; Assigned by: ${a.supervisor||'Supervisor'}</div>
+      ${actions?`<div class="assign-actions">${actions}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function updateAssignmentStatus(rowIndex, status) {
+  const msg = document.getElementById('assigned-msg');
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=updateAssignmentStatus&rowIndex=${rowIndex}&status=${encodeURIComponent(status)}`);
+    const d = await r.json();
+    if (d.success) { loadAssignedTasks(); }
+    else { msg.innerHTML = `<div class="alert err">❌ ${d.error}</div>`; }
+  } catch { msg.innerHTML = `<div class="alert err">❌ Please check your internet connection.</div>`; }
+}
+</script>
+</body>
+</html>

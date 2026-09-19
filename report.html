@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMT — Monthly Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+:root {
+  --navy:#0b1f38;--blue:#1a4a8a;--gold:#c9972a;
+  --bg:#f0f4fa;--white:#fff;--bdr:#d0daea;--txt:#192840;--muted:#6b80a3;
+  --green:#1a7a4a;--gbg:#e6f4ed;--amber:#b05c00;--abg:#fef0e0;
+  --red:#991818;--rbg:#fdeaea;--sh:0 2px 16px rgba(11,31,56,0.10);--r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter','Noto Sans Tamil',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;}
+
+/* HEADER */
+.hdr{background:var(--navy);color:#fff;padding:0;box-shadow:0 2px 20px rgba(11,31,56,0.25);}
+.hdr-inner{max-width:1000px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.hdr-left{display:flex;align-items:center;gap:14px;}
+.hdr-icon{width:42px;height:42px;background:var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.hdr-title{font-size:15px;font-weight:700;}
+.hdr-sub{font-size:11px;opacity:0.55;margin-top:2px;}
+.back-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
+
+/* MAIN */
+.main{max-width:1000px;margin:0 auto;padding:24px;}
+
+/* FILTER CARD */
+.filter-card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--bdr);padding:24px;margin-bottom:20px;}
+.filter-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.filter-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:14px;align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:6px;}
+.fg label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.fg input,.fg select{padding:10px 13px;border:1.5px solid var(--bdr);border-radius:8px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fff;outline:none;-webkit-appearance:none;}
+.fg input:focus,.fg select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,74,138,0.12);}
+.btn-generate{padding:11px 24px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#1d55a0,var(--navy));color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.btn-generate:hover{opacity:.92;}
+.btn-pdf{padding:11px 24px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#991818,#6b0f0f);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;display:none;}
+.btn-pdf:hover{opacity:.92;}
+.btn-row{display:flex;gap:10px;margin-top:14px;}
+
+/* ALERT */
+.alert{padding:14px 16px;border-radius:9px;font-size:13.5px;margin-bottom:16px;line-height:1.55;}
+.info{background:var(--gbg);color:var(--green);border:1px solid #9dd4b5;}
+.err{background:var(--rbg);color:var(--red);border:1px solid #f0a0a0;}
+
+/* ══ REPORT PREVIEW ══ */
+#report-preview{display:none;}
+
+/* REPORT STYLES */
+.report-wrap{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--bdr);padding:0;overflow:hidden;margin-bottom:20px;}
+
+/* Report Header */
+.r-header{background:linear-gradient(135deg,var(--navy) 0%,#1e3f72 100%);color:#fff;padding:32px 40px;text-align:center;}
+.r-logo{font-size:40px;margin-bottom:8px;}
+.r-org{font-size:22px;font-weight:800;letter-spacing:0.5px;margin-bottom:4px;}
+.r-sub{font-size:14px;opacity:0.7;margin-bottom:16px;font-family:'Noto Sans Tamil',sans-serif;}
+.r-title{font-size:18px;font-weight:700;background:rgba(255,255,255,0.15);padding:10px 24px;border-radius:8px;display:inline-block;}
+.r-period{font-size:13px;opacity:0.65;margin-top:8px;}
+
+/* Summary KPIs */
+.r-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid var(--bdr);}
+.r-kpi{padding:20px;text-align:center;border-right:1px solid var(--bdr);}
+.r-kpi:last-child{border-right:none;}
+.r-kpi-val{font-size:28px;font-weight:800;color:var(--navy);}
+.r-kpi-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-family:'Noto Sans Tamil',sans-serif;}
+
+/* Section */
+.r-section{padding:28px 32px;border-bottom:1px solid var(--bdr);}
+.r-section:last-child{border-bottom:none;}
+.r-sec-title{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid var(--bdr);display:flex;align-items:center;gap:8px;}
+
+/* Branch Summary Table */
+.r-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:0;}
+.r-table th{background:var(--navy);color:#fff;padding:10px 14px;text-align:left;font-size:12px;font-weight:600;}
+.r-table th:first-child{border-radius:8px 0 0 0;}.r-table th:last-child{border-radius:0 8px 0 0;}
+.r-table td{padding:10px 14px;border-bottom:1px solid #edf2fb;}
+.r-table tr:last-child td{border-bottom:none;}
+.r-table tr:hover td{background:#f8faff;}
+.r-table tr:nth-child(even) td{background:#f8faff;}
+
+/* Rate bar */
+.rate-bar{display:flex;align-items:center;gap:8px;}
+.rate-bg{width:80px;height:7px;background:#edf2fb;border-radius:4px;overflow:hidden;flex-shrink:0;}
+.rate-fill{height:100%;border-radius:4px;}
+
+/* Badge */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.bc{background:var(--gbg);color:var(--green);}
+.bi{background:var(--abg);color:var(--amber);}
+.bp{background:var(--rbg);color:var(--red);}
+.blv{background:#fef0e0;color:#b05c00;}
+.cat{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:#e8f0fb;color:#1a4a8a;}
+
+/* Staff Detail */
+.staff-block{margin-bottom:20px;border:1px solid var(--bdr);border-radius:10px;overflow:hidden;}
+.staff-block-hd{background:linear-gradient(90deg,#f0f4fa,var(--white));padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr);}
+.staff-name{font-size:14px;font-weight:700;color:var(--navy);}
+.staff-meta{font-size:12px;color:var(--muted);}
+.staff-stats{display:flex;gap:10px;}
+.staff-stat{font-size:12px;font-weight:600;}
+
+/* Category Summary */
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:0;}
+.cat-box{background:#f8faff;border:1px solid var(--bdr);border-radius:8px;padding:14px;text-align:center;}
+.cat-val{font-size:22px;font-weight:800;color:var(--navy);}
+.cat-lbl{font-size:11px;color:var(--muted);margin-top:3px;font-family:'Noto Sans Tamil',sans-serif;}
+
+/* Footer */
+.r-footer{background:#f8faff;padding:18px 32px;text-align:center;border-top:1px solid var(--bdr);font-size:12px;color:var(--muted);}
+
+/* PRINT STYLES */
+@media print {
+  body{background:white;}
+  .hdr,.filter-card,.btn-row,.no-print{display:none!important;}
+  .main{padding:0;max-width:100%;}
+  #report-preview{display:block!important;}
+  .report-wrap{box-shadow:none;border:none;border-radius:0;}
+  .r-kpis{page-break-inside:avoid;}
+  .staff-block{page-break-inside:avoid;}
+  .r-section{page-break-inside:avoid;}
+}
+
+@media(max-width:700px){
+  .filter-grid{grid-template-columns:1fr 1fr;}
+  .r-kpis{grid-template-columns:1fr 1fr;}
+  .cat-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-left">
+      <div class="hdr-icon">📄</div>
+      <div>
+        <div class="hdr-title">Monthly Report — Department of Motor Traffic</div>
+        <div class="hdr-sub">Monthly Duty Report Generator</div>
+      </div>
+    </div>
+    <a href="admin.html" class="back-btn no-print">← Dashboard</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- FILTER -->
+  <div class="filter-card no-print">
+    <div class="filter-title">📅 Select the report period</div>
+    <div class="filter-grid">
+      <div class="fg">
+        <label>Start Date *</label>
+        <input type="date" id="from-date">
+      </div>
+      <div class="fg">
+        <label>End Date *</label>
+        <input type="date" id="to-date">
+      </div>
+      <div class="fg">
+        <label>Section (optional)</label>
+        <select id="r-branch">
+          <option value="">All sections</option>
+          <option>Section 1</option><option>Section 2</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn-generate" onclick="generateReport()">📊 Generate Report</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-pdf" id="pdf-btn" onclick="downloadPDF()">🖨️ PDF Download / Print</button>
+    </div>
+    <div id="gen-msg"></div>
+  </div>
+
+  <!-- REPORT PREVIEW -->
+  <div id="report-preview">
+    <div class="report-wrap" id="report-content">
+      <!-- Generated dynamically -->
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ⚠️ Replace this with YOUR new DMT Apps Script Web App URL after deployment (see SETUP.md)
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaesJ-fH8lB64kBzhYNSWWN9syk29m1GgCxJSCLxIF9iz-_Ug5r8C_R1XNrTEV5mc/exec';
+
+let reportData = [];
+
+// ─── INIT ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Default: this month
+  const now   = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const last  = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  document.getElementById('from-date').value = first.toISOString().split('T')[0];
+  document.getElementById('to-date').value   = last.toISOString().split('T')[0];
+});
+
+// ─── GENERATE ──────────────────────────────────
+async function generateReport() {
+  const from   = document.getElementById('from-date').value;
+  const to     = document.getElementById('to-date').value;
+  const branch = document.getElementById('r-branch').value;
+  const msg    = document.getElementById('gen-msg');
+
+  if (!from || !to) {
+    msg.innerHTML = `<div class="alert err" style="margin-top:12px">⚠️ Start and end date are required.</div>`; return;
+  }
+  if (new Date(from) > new Date(to)) {
+    msg.innerHTML = `<div class="alert err" style="margin-top:12px">⚠️ Start date must be before end date.</div>`; return;
+  }
+
+  msg.innerHTML = `<div class="alert info" style="margin-top:12px">⏳ Loading data…</div>`;
+
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=adminData`);
+    const d = await r.json();
+    let rows = d.rows || [];
+
+    // Filter by date range
+    rows = rows.filter(r => r.date >= from && r.date <= to);
+    // Filter by branch
+    if (branch) rows = rows.filter(r => r.branch === branch);
+
+    if (!rows.length) {
+      msg.innerHTML = `<div class="alert err" style="margin-top:12px">⚠️ No data for the selected period.</div>`; return;
+    }
+
+    reportData = rows;
+    renderReport(from, to, branch, rows);
+    msg.innerHTML = '';
+    document.getElementById('pdf-btn').style.display = 'inline-block';
+  } catch {
+    // Demo mode
+    reportData = generateDemoData(from, to, branch);
+    renderReport(from, to, branch, reportData);
+    msg.innerHTML = `<div class="alert info" style="margin-top:12px">ℹ️ Demo data is being shown. Real data will appear once Apps Script is connected.</div>`;
+    document.getElementById('pdf-btn').style.display = 'inline-block';
+  }
+}
+
+// ─── RENDER REPORT ────────────────────────────
+function renderReport(from, to, branch, rows) {
+  const nonLeave = rows.filter(r => r.status !== 'Leave');
+  const leave    = rows.filter(r => r.status === 'Leave');
+  const completed   = nonLeave.filter(r => r.status === 'Completed').length;
+  const inProgress  = nonLeave.filter(r => r.status === 'In Progress').length;
+  const pending     = nonLeave.filter(r => r.status === 'Pending').length;
+  const totalStaff  = [...new Set(rows.map(r => r.name))].length;
+  const compRate    = nonLeave.length > 0 ? Math.round((completed / nonLeave.length) * 100) : 0;
+
+  // Format dates
+  const fromFmt = new Date(from).toLocaleDateString('ta-IN', {year:'numeric',month:'long',day:'numeric'});
+  const toFmt   = new Date(to).toLocaleDateString('ta-IN', {year:'numeric',month:'long',day:'numeric'});
+  const genDate = new Date().toLocaleDateString('ta-IN', {year:'numeric',month:'long',day:'numeric'});
+
+  // ── Branch Summary ──
+  const branchMap = {};
+  rows.forEach(r => {
+    if (!branchMap[r.branch]) branchMap[r.branch] = {completed:0,inProgress:0,pending:0,leave:0,staff:new Set()};
+    branchMap[r.branch].staff.add(r.name);
+    if (r.status === 'Completed')   branchMap[r.branch].completed++;
+    if (r.status === 'In Progress') branchMap[r.branch].inProgress++;
+    if (r.status === 'Pending')     branchMap[r.branch].pending++;
+    if (r.status === 'Leave')       branchMap[r.branch].leave++;
+  });
+  const branchRows = Object.entries(branchMap).sort((a,b) =>
+    (b[1].completed+b[1].inProgress+b[1].pending) - (a[1].completed+a[1].inProgress+a[1].pending)
+  );
+
+  // ── Category Summary ──
+  const catMap = {};
+  nonLeave.forEach(r => {
+    const cat = r.category || 'General Work';
+    catMap[cat] = (catMap[cat] || 0) + 1;
+  });
+
+  // ── Staff Detail ──
+  const staffMap = {};
+  rows.forEach(r => {
+    if (!staffMap[r.name]) staffMap[r.name] = { branch:r.branch, tasks:[], leaveDays:0 };
+    if (r.status === 'Leave') staffMap[r.name].leaveDays++;
+    else staffMap[r.name].tasks.push(r);
+  });
+  const staffList = Object.entries(staffMap).sort((a,b) => b[1].tasks.length - a[1].tasks.length);
+
+  document.getElementById('report-preview').style.display = 'block';
+  document.getElementById('report-content').innerHTML = `
+
+    <!-- HEADER -->
+    <div class="r-header">
+      <div class="r-logo">🏛️</div>
+      <div class="r-org">Department of Motor Traffic</div>
+      <div class="r-sub">Jaffna Municipal Council</div>
+      <div class="r-title">Daily Duty — Monthly Report</div>
+      <div class="r-period">${fromFmt} to ${toFmt} ${branch ? '| ' + branch : ''}</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="r-kpis">
+      <div class="r-kpi">
+        <div class="r-kpi-val">${totalStaff}</div>
+        <div class="r-kpi-lbl">Staff</div>
+      </div>
+      <div class="r-kpi">
+        <div class="r-kpi-val" style="color:var(--green)">${completed}</div>
+        <div class="r-kpi-lbl">Completed Tasks</div>
+      </div>
+      <div class="r-kpi">
+        <div class="r-kpi-val" style="color:var(--amber)">${inProgress}</div>
+        <div class="r-kpi-lbl">In progress</div>
+      </div>
+      <div class="r-kpi">
+        <div class="r-kpi-val" style="color:var(--red)">${pending}</div>
+        <div class="r-kpi-lbl">Pending</div>
+      </div>
+      <div class="r-kpi">
+        <div class="r-kpi-val" style="color:var(--blue)">${compRate}%</div>
+        <div class="r-kpi-lbl">Completion Rate</div>
+      </div>
+    </div>
+
+    <!-- CATEGORY SUMMARY -->
+    <div class="r-section">
+      <div class="r-sec-title">📋 Task Category Summary</div>
+      <div class="cat-grid">
+        ${Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([cat,cnt])=>`
+          <div class="cat-box">
+            <div class="cat-val">${cnt}</div>
+            <div class="cat-lbl">${cat}</div>
+          </div>`).join('')}
+        ${leave.length > 0 ? `<div class="cat-box" style="background:#fff8f0;border-color:#f0c080">
+          <div class="cat-val" style="color:var(--amber)">${leave.length}</div>
+          <div class="cat-lbl">Leave Days</div>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <!-- BRANCH SUMMARY -->
+    <div class="r-section">
+      <div class="r-sec-title">🏢 Section-wise Summary (Branch Summary)</div>
+      <table class="r-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Section</th>
+            <th>Staff</th>
+            <th>✅ Completed</th>
+            <th>🔄 In progress</th>
+            <th>⏳ Pending</th>
+            <th>🏖️ Leave</th>
+            <th>Total</th>
+            <th>Completion %</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${branchRows.map(([name, v], i) => {
+            const total = v.completed + v.inProgress + v.pending;
+            const rate  = total > 0 ? Math.round((v.completed / total) * 100) : 0;
+            const color = rate >= 80 ? '#1a7a4a' : rate >= 50 ? '#e08030' : '#991818';
+            return `<tr>
+              <td>${i+1}</td>
+              <td><strong>${name}</strong></td>
+              <td>${v.staff.size}</td>
+              <td style="color:var(--green);font-weight:700">${v.completed}</td>
+              <td style="color:var(--amber);font-weight:700">${v.inProgress}</td>
+              <td style="color:var(--red);font-weight:700">${v.pending}</td>
+              <td style="color:var(--amber)">${v.leave}</td>
+              <td><strong>${total}</strong></td>
+              <td>
+                <div class="rate-bar">
+                  <div class="rate-bg"><div class="rate-fill" style="width:${rate}%;background:${color}"></div></div>
+                  <span style="color:${color};font-weight:700;font-size:12px">${rate}%</span>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- STAFF DETAIL -->
+    <div class="r-section">
+      <div class="r-sec-title">👤 Staff-wise details (Staff Detail)</div>
+      ${staffList.map(([name, info]) => {
+        const c  = info.tasks.filter(t => t.status === 'Completed').length;
+        const ip = info.tasks.filter(t => t.status === 'In Progress').length;
+        const p  = info.tasks.filter(t => t.status === 'Pending').length;
+        const rate = info.tasks.length > 0 ? Math.round((c / info.tasks.length) * 100) : 0;
+        // Group tasks by date
+        const byDate = {};
+        info.tasks.forEach(t => {
+          if (!byDate[t.date]) byDate[t.date] = [];
+          byDate[t.date].push(t);
+        });
+        const dateEntries = Object.entries(byDate).sort((a,b) => a[0].localeCompare(b[0]));
+        return `
+          <div class="staff-block">
+            <div class="staff-block-hd">
+              <div>
+                <div class="staff-name">${name}</div>
+                <div class="staff-meta">${info.branch}</div>
+              </div>
+              <div class="staff-stats">
+                <span class="badge bc">${c} Completed</span>
+                <span class="badge bi">${ip} In progress</span>
+                <span class="badge bp">${p} Pending</span>
+                ${info.leaveDays > 0 ? `<span class="badge blv">${info.leaveDays} Leave</span>` : ''}
+                <span style="font-size:12px;font-weight:700;color:${rate>=80?'var(--green)':rate>=50?'var(--amber)':'var(--red)'}">${rate}%</span>
+              </div>
+            </div>
+            <table class="r-table">
+              <thead>
+                <tr><th>Date</th><th>Task Description</th><th>Category</th><th>Time</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                ${dateEntries.map(([date, tasks]) =>
+                  tasks.map((t, ti) => {
+                    const bc = t.status==='Completed'?'bc':t.status==='In Progress'?'bi':'bp';
+                    const lbl= t.status==='Completed'?'Completed':t.status==='In Progress'?'In Progress':'Pending';
+                    const time = t.startTime ? `${t.startTime}${t.endTime?' → '+t.endTime:''}` : '—';
+                    return `<tr>
+                      ${ti===0?`<td rowspan="${tasks.length}" style="font-weight:600;background:#f8faff;vertical-align:top">${date}</td>`:''}
+                      <td>${t.task}</td>
+                      <td><span class="cat">${t.category||'General'}</span></td>
+                      <td style="font-size:12px;white-space:nowrap">${time}</td>
+                      <td><span class="badge ${bc}">${lbl}</span></td>
+                    </tr>`;
+                  }).join('')
+                ).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      }).join('')}
+    </div>
+
+    <!-- FOOTER -->
+    <div class="r-footer">
+      <strong>Department of Motor Traffic</strong> — Daily Duty Report System<br>
+      Report generated on: ${genDate} &nbsp;|&nbsp;
+      Period: ${fromFmt} — ${toFmt}
+    </div>
+  `;
+
+  // Scroll to report
+  document.getElementById('report-preview').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─── PDF DOWNLOAD ──────────────────────────────
+function downloadPDF() {
+  window.print();
+}
+
+// ─── DEMO DATA ─────────────────────────────────
+function generateDemoData(from, to, branch) {
+  const branches = branch ? [branch] : ['Section 1','Section 2'];
+  const names    = ['Kumar S','Priya R','Siva T','Meena K','Raj M','Gowri P','Arjun V'];
+  const tasks    = ['Preparing reports','Field survey','Meeting','Writing letters','Audit'];
+  const cats     = ['Office Work','Field Work','Meeting','Inspection Work','General Work'];
+  const statuses = ['Completed','Completed','Completed','In Progress','Pending','Leave'];
+  const rows     = [];
+  const start    = new Date(from), end = new Date(to);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    if (d.getDay() === 0 || d.getDay() === 6) continue; // skip weekends
+    const date = d.toISOString().split('T')[0];
+    names.slice(0, 5).forEach(name => {
+      const b = branches[Math.floor(Math.random() * branches.length)];
+      const n = Math.floor(Math.random() * 3) + 1;
+      for (let i = 0; i < n; i++) {
+        rows.push({
+          date, name, branch: b,
+          task:      tasks[Math.floor(Math.random() * tasks.length)],
+          category:  cats[Math.floor(Math.random() * cats.length)],
+          startTime: `0${8+i}:00`, endTime: `0${9+i}:30`,
+          status:    statuses[Math.floor(Math.random() * statuses.length)]
+        });
+      }
+    });
+  }
+  return rows;
+}
+</script>
+</body>
+</html>
