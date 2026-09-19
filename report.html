@@ -128,9 +128,36 @@ body{font-family:'Inter','Noto Sans Tamil',sans-serif;background:var(--bg);color
   .r-kpis{grid-template-columns:1fr 1fr;}
   .cat-grid{grid-template-columns:1fr 1fr;}
 }
+/* LOGIN GATE */
+.auth-wrap{max-width:400px;margin:70px auto;padding:0 16px;}
+.auth-card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(13,33,55,0.10);border:1px solid #cdd8ec;padding:32px;text-align:center;}
+.auth-icon{font-size:38px;margin-bottom:8px;}
+.auth-title{font-size:17px;font-weight:700;color:#0d2137;margin-bottom:4px;}
+.auth-sub{font-size:12.5px;color:#6b80a3;margin-bottom:20px;}
+.auth-card input{width:100%;padding:11px 13px;border:1.5px solid #cdd8ec;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none;text-align:center;}
+.auth-card input:focus{border-color:#1a4a8a;}
+.auth-btn{display:block;width:100%;padding:12px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#1d55a0,#0d2137);color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;}
+.auth-err{color:#991818;font-size:12.5px;margin-top:10px;min-height:16px;}
 </style>
 </head>
 <body>
+
+<!-- LOGIN GATE -->
+<div id="login-gate">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-icon">🔐</div>
+      <div class="auth-title">Commissioner Login</div>
+      <div class="auth-sub">Enter the Commissioner password to view reports</div>
+      <input type="password" id="admin-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+      <button class="auth-btn" id="admin-login-btn" onclick="doAdminLogin()">Unlock</button>
+      <div class="auth-err" id="admin-login-err"></div>
+    </div>
+  </div>
+</div>
+
+<div id="dashboard-content" style="display:none">
 
 <div class="hdr">
   <div class="hdr-inner">
@@ -163,7 +190,7 @@ body{font-family:'Inter','Noto Sans Tamil',sans-serif;background:var(--bg);color
         <label>Section (optional)</label>
         <select id="r-branch">
           <option value="">All sections</option>
-          <option>Accountant </option><option></option>Administrative Officer 
+          <option>Section 1</option><option>Section 2</option>
         </select>
       </div>
       <div>
@@ -187,19 +214,41 @@ body{font-family:'Inter','Noto Sans Tamil',sans-serif;background:var(--bg);color
 
 <script>
 // ⚠️ Replace this with YOUR new DMT Apps Script Web App URL after deployment (see SETUP.md)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaesJ-fH8lB64kBzhYNSWWN9syk29m1GgCxJSCLxIF9iz-_Ug5r8C_R1XNrTEV5mc/exec';
+const SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
 let reportData = [];
 
-// ─── INIT ──────────────────────────────────────
+// ─── COMMISSIONER LOGIN GATE ────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('dmt_admin_ok') === '1') showDashboard();
+});
+
+async function doAdminLogin() {
+  const pass = document.getElementById('admin-pass').value;
+  const err = document.getElementById('admin-login-err');
+  const btn = document.getElementById('admin-login-btn');
+  err.textContent = '';
+  if (!pass) { err.textContent = 'Please enter the password.'; return; }
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=adminLogin&password=${encodeURIComponent(pass)}`);
+    const d = await r.json();
+    if (d.success) { sessionStorage.setItem('dmt_admin_ok', '1'); showDashboard(); }
+    else { err.textContent = 'Incorrect password.'; }
+  } catch { err.textContent = 'Could not reach the server. Check your internet connection.'; }
+  finally { btn.disabled = false; btn.textContent = 'Unlock'; }
+}
+
+function showDashboard() {
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('dashboard-content').style.display = 'block';
   // Default: this month
   const now   = new Date();
   const first = new Date(now.getFullYear(), now.getMonth(), 1);
   const last  = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   document.getElementById('from-date').value = first.toISOString().split('T')[0];
   document.getElementById('to-date').value   = last.toISOString().split('T')[0];
-});
+}
 
 // ─── GENERATE ──────────────────────────────────
 async function generateReport() {
@@ -458,7 +507,7 @@ function downloadPDF() {
 
 // ─── DEMO DATA ─────────────────────────────────
 function generateDemoData(from, to, branch) {
-  const branches = branch ? [branch] : ['Accountant ','Administrative Officer '];
+  const branches = branch ? [branch] : ['Section 1','Section 2'];
   const names    = ['Kumar S','Priya R','Siva T','Meena K','Raj M','Gowri P','Arjun V'];
   const tasks    = ['Preparing reports','Field survey','Meeting','Writing letters','Audit'];
   const cats     = ['Office Work','Field Work','Meeting','Inspection Work','General Work'];
@@ -485,5 +534,6 @@ function generateDemoData(from, to, branch) {
   return rows;
 }
 </script>
+</div>
 </body>
 </html>

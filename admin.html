@@ -50,6 +50,17 @@ body{font-family:'Inter','Noto Sans Tamil',sans-serif;background:var(--bg);color
 .grid3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
 /* CARD */
 .card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--bdr);padding:20px;margin-bottom:16px;}
+/* LOGIN GATE */
+.auth-wrap{max-width:400px;margin:70px auto;padding:0 16px;}
+.auth-card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--bdr);padding:32px;text-align:center;}
+.auth-icon{font-size:38px;margin-bottom:8px;}
+.auth-title{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.auth-sub{font-size:12.5px;color:var(--muted);margin-bottom:20px;}
+.auth-card input{width:100%;padding:11px 13px;border:1.5px solid var(--bdr);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none;text-align:center;}
+.auth-card input:focus{border-color:var(--blue);}
+.auth-btn{display:block;width:100%;padding:12px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#1d55a0,var(--navy));color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;}
+.auth-err{color:var(--red);font-size:12.5px;margin-top:10px;min-height:16px;}
 .card-hd{font-size:13px;font-weight:700;color:var(--navy);padding-bottom:12px;margin-bottom:16px;border-bottom:1.5px solid #edf2fb;display:flex;align-items:center;justify-content:space-between;}
 .card-hd span{font-size:12px;color:var(--muted);font-weight:400;}
 /* TABLE */
@@ -152,6 +163,22 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
 </head>
 <body>
 
+<!-- LOGIN GATE -->
+<div id="login-gate">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-icon">🔐</div>
+      <div class="auth-title">Commissioner Login</div>
+      <div class="auth-sub">Enter the Commissioner password to view the dashboard</div>
+      <input type="password" id="admin-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+      <button class="auth-btn" id="admin-login-btn" onclick="doAdminLogin()">Unlock Dashboard</button>
+      <div class="auth-err" id="admin-login-err"></div>
+    </div>
+  </div>
+</div>
+
+<div id="dashboard-content" style="display:none">
+
 <div class="hdr">
   <div class="hdr-inner">
     <div class="hdr-left">
@@ -164,6 +191,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
     <div style="display:flex;align-items:center;gap:10px">
       <div class="hdr-badge">COMMISSIONER</div>
       <button class="refresh-btn" onclick="loadAll()">⟳ Refresh</button>
+      <button class="refresh-btn" onclick="doAdminLogout()">Log Out</button>
     </div>
   </div>
   <div class="nav-tabs">
@@ -183,7 +211,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
     <span class="filter-lbl">Filter:</span>
     <select id="f-branch" onchange="updateStaffDropdown();applyFilter()">
       <option value="">All sections</option>
-      <option>Accountant</option><option>Administrative Officer </option>
+      <option>Section 1</option><option>Section 2</option>
     </select>
     <select id="f-month" onchange="updateStaffDropdown();applyFilter()">
       <option value="">All months</option>
@@ -313,17 +341,50 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
 
 <script>
 // ⚠️ Replace this with YOUR new DMT Apps Script Web App URL after deployment (see SETUP.md)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaesJ-fH8lB64kBzhYNSWWN9syk29m1GgCxJSCLxIF9iz-_Ug5r8C_R1XNrTEV5mc/exec';
+const SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
 let allData   = [];
 let filtered  = [];
 
-// ─── INIT ──────────────────────────────────────────
+// ─── COMMISSIONER LOGIN GATE ────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('dmt_admin_ok') === '1') showDashboard();
+});
+
+async function doAdminLogin() {
+  const pass = document.getElementById('admin-pass').value;
+  const err = document.getElementById('admin-login-err');
+  const btn = document.getElementById('admin-login-btn');
+  err.textContent = '';
+  if (!pass) { err.textContent = 'Please enter the password.'; return; }
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=adminLogin&password=${encodeURIComponent(pass)}`);
+    const d = await r.json();
+    if (d.success) {
+      sessionStorage.setItem('dmt_admin_ok', '1');
+      showDashboard();
+    } else {
+      err.textContent = 'Incorrect password.';
+    }
+  } catch { err.textContent = 'Could not reach the server. Check your internet connection.'; }
+  finally { btn.disabled = false; btn.textContent = 'Unlock Dashboard'; }
+}
+
+function doAdminLogout() {
+  sessionStorage.removeItem('dmt_admin_ok');
+  document.getElementById('dashboard-content').style.display = 'none';
+  document.getElementById('login-gate').style.display = 'block';
+  document.getElementById('admin-pass').value = '';
+}
+
+function showDashboard() {
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('dashboard-content').style.display = 'block';
   document.getElementById('f-month').value = new Date().getMonth() + 1;
   document.getElementById('annual-year').textContent = new Date().getFullYear();
   loadAll();
-});
+}
 
 // ─── PANEL SWITCH ──────────────────────────────────
 function switchPanel(name, btn) {
@@ -777,7 +838,7 @@ function renderAnnual() {
 //  DEMO DATA
 // ══════════════════════════════════════════════════
 function loadDemo() {
-  const branches=['Accountant ','Administrative Officer '];
+  const branches=['Section 1','Section 2'];
   const names=['Kumar S','Priya R','Siva T','Meena K','Raj M','Gowri P','Arjun V','Devi S','Murugan K','Nithya R','Bala S','Kavitha M'];
   const tasks=['Preparing reports','Field survey','Meeting','Letter','Audit','Project task'];
   const cats=['Office Work','Field Work','Meeting','Inspection Work','General Work'];
@@ -797,5 +858,6 @@ function loadDemo() {
   allData=rows; applyFilter(); populateStaffSelects();
 }
 </script>
+</div>
 </body>
 </html>
