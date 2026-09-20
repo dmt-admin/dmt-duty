@@ -231,7 +231,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:var(--light);}
 
 <script>
 // ⚠️ Replace this with YOUR new DMT Apps Script Web App URL after deployment (see SETUP.md)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaesJ-fH8lB64kBzhYNSWWN9syk29m1GgCxJSCLxIF9iz-_Ug5r8C_R1XNrTEV5mc/exec';
+const SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
 const TEMPLATES = {
   'Office Work': ['Preparing files','Writing letters','Preparing reports','Recording information','Verifying documents','Phone follow-up'],
@@ -304,14 +304,13 @@ async function submitRegistration() {
   const btn=document.getElementById('reg-btn');
   btn.disabled=true;btn.textContent='⏳ Sending…';
   try {
-    // no-cors mode — response can't be read, but it still saves to the Sheet
-    await fetch(SCRIPT_URL, {
+    const r = await fetch(SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify({action:'register', name, nic, post, branch})
     });
-    // Submitted — now check status
+    const result = await r.json();
+    if (result.success === false) { msg.innerHTML = `<div class="alert err">❌ ${result.error || 'Registration failed. Please try again.'}</div>`; return; }
     staffInfo = {name, nic, post, branch};
     localStorage.setItem('dmt_staff_v1', JSON.stringify(staffInfo));
     prefillAll();
@@ -497,8 +496,10 @@ async function submitDuty() {
   const btn=document.getElementById('sbtn');
   btn.disabled=true;btn.textContent='⏳ Submitting…';
   try {
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'submitDuty',name:staffInfo.name,nic:staffInfo.nic,post:staffInfo.post,branch:staffInfo.branch,date,tasks})});
+    const result=await r.json();
+    if(result.success===false){msg.innerHTML=`<div class="alert err">❌ ${result.error||'Could not submit. Please try again.'}</div>`;return;}
     msg.innerHTML=`<div class="alert ok">✅ <strong>${staffInfo.name}</strong>'s report has been submitted!<br>📋 ${tasks.length} tasks — will appear in your history once your supervisor confirms them.</div>`;
     document.getElementById('tasks').innerHTML='';tc=0;addTask();window.scrollTo(0,0);
   } catch {msg.innerHTML=`<div class="alert err">❌ Please check your internet connection.</div>`;}
@@ -515,9 +516,11 @@ async function submitLeave() {
   const btn=document.getElementById('lbtn');
   btn.disabled=true;btn.textContent='⏳ Saving…';
   try {
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'submitDuty',name:staffInfo.name,nic:staffInfo.nic,post:staffInfo.post,branch:staffInfo.branch,date,
         tasks:[{description:leaveType,category:'Leave',startTime:'',endTime:'',status:'Leave'}]})});
+    const result=await r.json();
+    if(result.success===false){msg.innerHTML=`<div class="alert err">❌ ${result.error||'Could not submit. Please try again.'}</div>`;return;}
     msg.innerHTML=`<div class="alert ok">✅ Leave recorded — ${leaveType}.</div>`;
     toggleLeave();window.scrollTo(0,0);
   } catch {msg.innerHTML=`<div class="alert err">❌ Please check your internet connection.</div>`;}

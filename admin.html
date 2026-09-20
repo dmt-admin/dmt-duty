@@ -390,7 +390,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
 
 <script>
 // ⚠️ Replace this with YOUR new DMT Apps Script Web App URL after deployment (see SETUP.md)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaesJ-fH8lB64kBzhYNSWWN9syk29m1GgCxJSCLxIF9iz-_Ug5r8C_R1XNrTEV5mc/exec';
+const SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
 let allData   = [];
 let filtered  = [];
@@ -461,11 +461,13 @@ async function assignTaskFromAdmin() {
   const btn = document.getElementById('assign-btn');
   btn.disabled = true; btn.textContent = '⏳ Assigning…';
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+    const r = await fetch(SCRIPT_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'assignTask', branch: staffBranch, supervisor: 'Commissioner',
         staffName, staffNic, task: desc, category: cat, priority, dueDate: due })
     });
+    const result = await r.json();
+    if (result.success === false) { msg.innerHTML = `<div class="alert err" style="padding:12px;border-radius:8px;background:var(--rbg);color:var(--red)">❌ ${result.error || 'Could not assign task. Please try again.'}</div>`; return; }
     msg.innerHTML = `<div class="alert ok" style="padding:12px;border-radius:8px;background:var(--gbg);color:var(--green)">✅ Task assigned to ${staffName}.</div>`;
     document.getElementById('assign-desc').value = '';
     document.getElementById('assign-due').value = '';

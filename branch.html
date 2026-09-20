@@ -101,7 +101,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:var(--light);}
       <div class="fg"><label>Section *</label>
         <select id="login-branch">
           <option value="">— Select Section —</option>
-          <option>Commissioner </option><option>Accountant </option><option>Administrative Officer </option>
+          <option>Section 1</option><option>Section 2</option>
         </select>
       </div>
       <div class="fg"><label>Username *</label><input id="login-user" type="text" placeholder="Your username"></div>
@@ -123,7 +123,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:var(--light);}
       <div class="fg"><label>Section *</label>
         <select id="reg-branch">
           <option value="">— Select Section —</option>
-          <option>Commissioner </option><option>Accountant </option><option>Administrative Officer </option>
+          <option>Section 1</option><option>Section 2</option>
         </select>
       </div>
       <div class="fg"><label>IT Secret Code *</label><input id="reg-secret" type="text" placeholder="Code received from IT Division"></div>
@@ -262,7 +262,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:var(--light);}
 
 <script>
 // ⚠️ Replace this with YOUR new DMT Apps Script Web App URL after deployment (see SETUP.md)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaesJ-fH8lB64kBzhYNSWWN9syk29m1GgCxJSCLxIF9iz-_Ug5r8C_R1XNrTEV5mc/exec';
+const SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
 let currentBranch = '', currentUsername = '';
 
@@ -273,13 +273,18 @@ async function getAPI(params) {
   return await r.json();
 }
 
-// ── POST no-cors helper (no response) ──────────
-async function postNoCors(data) {
-  await fetch(SCRIPT_URL, {
-    method: 'POST', mode: 'no-cors',
-    headers: {'Content-Type': 'application/json'},
+// ── POST helper (reads the actual server response) ──
+// NOTE: Content-Type is text/plain, not application/json — this keeps
+// the request a "simple request" so the browser skips a CORS preflight
+// (which Apps Script Web Apps don't support). Apps Script still parses
+// the raw JSON body fine via JSON.parse(e.postData.contents).
+async function postAPI(data) {
+  const r = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
     body: JSON.stringify(data)
   });
+  return await r.json();
 }
 
 // ── AUTH ───────────────────────────────────────
@@ -352,7 +357,8 @@ async function doRegister() {
   const btn=document.getElementById('reg-btn');
   btn.disabled=true; btn.textContent='⏳ Creating…';
   try {
-    await postNoCors({action:'bhRegister', branch, secret, username, password:pass});
+    const result = await postAPI({action:'bhRegister', branch, secret, username, password:pass});
+    if(result.success===false){msg.innerHTML=`<div class="alert err">❌ ${result.error||'Could not create account. Please check your Secret Code.'}</div>`;return;}
     msg.innerHTML=`<div class="alert ok">✅ Account created successfully! You can now log in.</div>`;
     setTimeout(()=>{document.getElementById('login-branch').value=branch;document.getElementById('login-user').value=username;showLogin();},1500);
   } catch(e){msg.innerHTML=`<div class="alert err">❌ Error: ${e.message}</div>`;}
@@ -570,8 +576,9 @@ async function assignTask(){
   const btn=document.getElementById('assign-btn');
   btn.disabled=true;btn.textContent='⏳ Assigning…';
   try {
-    await postNoCors({action:'assignTask',branch:currentBranch,supervisor:currentUsername,
+    const result = await postAPI({action:'assignTask',branch:currentBranch,supervisor:currentUsername,
       staffName,staffNic,task:desc,category:cat,priority,dueDate:due});
+    if(result.success===false){msg.innerHTML=`<div class="alert err">❌ ${result.error||'Could not assign task. Please try again.'}</div>`;return;}
     msg.innerHTML=`<div class="alert ok">✅ Task assigned to ${staffName}.</div>`;
     document.getElementById('assign-desc').value='';
     document.getElementById('assign-due').value='';
