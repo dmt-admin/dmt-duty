@@ -226,7 +226,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
     <span class="filter-lbl">Filter:</span>
     <select id="f-branch" onchange="updateStaffDropdown();applyFilter()">
       <option value="">All sections</option>
-      <option>Section 1</option><option>Section 2</option>
+      <option>Accountant</option><option>Administrative Officer</option>
     </select>
     <select id="f-month" onchange="updateStaffDropdown();applyFilter()">
       <option value="">All months</option>
@@ -951,7 +951,7 @@ function renderAnnual() {
 //  DEMO DATA
 // ══════════════════════════════════════════════════
 function loadDemo() {
-  const branches=['Section 1','Section 2'];
+  const branches=['Accountant','Administrative Officer'];
   const names=['Kumar S','Priya R','Siva T','Meena K','Raj M','Gowri P','Arjun V','Devi S','Murugan K','Nithya R','Bala S','Kavitha M'];
   const tasks=['Preparing reports','Field survey','Meeting','Letter','Audit','Project task'];
   const cats=['Office Work','Field Work','Meeting','Inspection Work','General Work'];
