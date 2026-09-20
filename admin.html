@@ -77,6 +77,20 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
 .blv{background:#fef0e0;color:#b05c00;}
 /* CAT BADGE */
 .cat{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#e8f0fb;color:#1a4a8a;}
+/* ASSIGN TASK (Commissioner) */
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.fg label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.fg select,.fg input,.fg textarea{padding:10px 13px;border:1.5px solid var(--bdr);border-radius:8px;font-size:13.5px;font-family:inherit;color:var(--txt);background:#fff;outline:none;width:100%;}
+.fg select:focus,.fg input:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,74,138,0.12);}
+.fg textarea{resize:vertical;min-height:70px;}
+.btn{display:block;width:100%;padding:13px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#1d55a0,var(--navy));color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(13,33,55,0.20);}
+.btn:hover{opacity:.92;}.btn:disabled{opacity:.45;cursor:not-allowed;}
+.prio{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;margin-left:6px;}
+.prio-low{background:#e8f0fb;color:#1a4a8a;}.prio-medium{background:var(--abg);color:var(--amber);}.prio-high{background:var(--rbg);color:var(--red);}
+.assign-card{background:var(--light);border:1.5px solid #c2d3ed;border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.assign-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px;flex-wrap:wrap;}
+.assign-desc{font-size:13px;line-height:1.5;margin-bottom:6px;}
+.assign-meta{font-size:11.5px;color:var(--muted);}
 /* DAILY CHART */
 .daily-chart{display:flex;align-items:flex-end;gap:4px;height:100px;}
 .day-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
@@ -196,6 +210,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
   </div>
   <div class="nav-tabs">
     <button class="nav-tab on"  onclick="switchPanel('overview',this)">📊 Overview</button>
+    <button class="nav-tab"     onclick="switchPanel('assign',this)">📌 Assign Task</button>
     <button class="nav-tab"     onclick="switchPanel('heatmap',this)">🗓️ Heatmap</button>
     <button class="nav-tab"     onclick="switchPanel('consistency',this)">🔥 Consistency</button>
     <button class="nav-tab"     onclick="switchPanel('branch',this)">🏢 Branch Comparison</button>
@@ -211,7 +226,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
     <span class="filter-lbl">Filter:</span>
     <select id="f-branch" onchange="updateStaffDropdown();applyFilter()">
       <option value="">All sections</option>
-      <option>Commissioner </option><option>Accountant </option><option>Administrative Officer </option>
+      <option>Section 1</option><option>Section 2</option>
     </select>
     <select id="f-month" onchange="updateStaffDropdown();applyFilter()">
       <option value="">All months</option>
@@ -258,6 +273,40 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
     <div class="card">
       <div class="card-hd">🕐 Today's Submissions <span id="today-count"></span></div>
       <div id="today-feed"><div class="loading">⏳</div></div>
+    </div>
+  </div>
+
+  <!-- ══ ASSIGN TASK (Commissioner) ══ -->
+  <div class="panel" id="p-assign">
+    <div id="assign-msg"></div>
+    <div class="card">
+      <div class="card-hd">📌 Assign a New Task — Any Section</div>
+      <div class="fg"><label>Staff *</label>
+        <select id="assign-staff"><option value="">— Select staff —</option></select>
+      </div>
+      <div class="fg"><label>Task Description *</label>
+        <textarea id="assign-desc" placeholder="Describe the task to assign…"></textarea>
+      </div>
+      <div class="fg"><label>Category</label>
+        <select id="assign-cat">
+          <option value="">— Select —</option>
+          <option>Office Work</option><option>Field Work</option><option>Meeting</option>
+          <option>Inspection Work</option><option>Training</option><option>General Work</option>
+        </select>
+      </div>
+      <div class="fg"><label>Priority *</label>
+        <select id="assign-priority">
+          <option value="Low">Low</option>
+          <option value="Medium" selected>Medium</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+      <div class="fg"><label>Due Date *</label><input type="date" id="assign-due"></div>
+      <button class="btn" id="assign-btn" onclick="assignTaskFromAdmin()">📤 Assign Task</button>
+    </div>
+    <div class="card">
+      <div class="card-hd">📋 All Assigned Tasks (Every Section) <span class="refresh-lnk" style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600" onclick="loadAllAssignments()">⟳ Refresh</span></div>
+      <div id="assign-list"><div class="empty" style="text-align:center;padding:30px;color:var(--muted)">⏳ Loading data…</div></div>
     </div>
   </div>
 
@@ -341,7 +390,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#f5f8fd;}
 
 <script>
 // ⚠️ Replace this with YOUR new DMT Apps Script Web App URL after deployment (see SETUP.md)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaesJ-fH8lB64kBzhYNSWWN9syk29m1GgCxJSCLxIF9iz-_Ug5r8C_R1XNrTEV5mc/exec';
+const SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
 let allData   = [];
 let filtered  = [];
@@ -386,6 +435,67 @@ function showDashboard() {
   loadAll();
 }
 
+// ─── COMMISSIONER: ASSIGN TASK TO ANY STAFF ─────────
+async function loadAllApprovedStaffForAssign() {
+  const sel = document.getElementById('assign-staff');
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=allApprovedStaff`);
+    const d = await r.json();
+    const list = d.staff || [];
+    if (!list.length) { sel.innerHTML = '<option value="">No approved staff yet</option>'; return; }
+    sel.innerHTML = '<option value="">— Select staff —</option>' +
+      list.map(s => `<option value="${s.name}|${s.nic}|${s.branch}">${s.name} — ${s.branch}</option>`).join('');
+  } catch { sel.innerHTML = '<option value="">Error loading staff</option>'; }
+}
+
+async function assignTaskFromAdmin() {
+  const msg = document.getElementById('assign-msg');
+  const staffVal = document.getElementById('assign-staff').value;
+  const desc = document.getElementById('assign-desc').value.trim();
+  const cat = document.getElementById('assign-cat').value;
+  const priority = document.getElementById('assign-priority').value;
+  const due = document.getElementById('assign-due').value;
+  if (!staffVal || !desc || !priority || !due) { msg.innerHTML = `<div class="alert err" style="padding:12px;border-radius:8px;background:var(--rbg);color:var(--red)">⚠️ Staff, task description, priority and due date are required.</div>`; return; }
+  const [staffName, staffNic, staffBranch] = staffVal.split('|');
+  const btn = document.getElementById('assign-btn');
+  btn.disabled = true; btn.textContent = '⏳ Assigning…';
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'assignTask', branch: staffBranch, supervisor: 'Commissioner',
+        staffName, staffNic, task: desc, category: cat, priority, dueDate: due })
+    });
+    msg.innerHTML = `<div class="alert ok" style="padding:12px;border-radius:8px;background:var(--gbg);color:var(--green)">✅ Task assigned to ${staffName}.</div>`;
+    document.getElementById('assign-desc').value = '';
+    document.getElementById('assign-due').value = '';
+    loadAllAssignments();
+  } catch (e) { msg.innerHTML = `<div class="alert err" style="padding:12px;border-radius:8px;background:var(--rbg);color:var(--red)">❌ Error: ${e.message}</div>`; }
+  finally { btn.disabled = false; btn.textContent = '📤 Assign Task'; }
+}
+
+async function loadAllAssignments() {
+  const el = document.getElementById('assign-list');
+  el.innerHTML = '<div class="empty">⏳ Loading data…</div>';
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=allAssignments`);
+    const d = await r.json();
+    const items = d.assignments || [];
+    if (!items.length) { el.innerHTML = '<div class="empty">No tasks assigned yet.</div>'; return; }
+    el.innerHTML = items.map(a => {
+      const prioClass = a.priority === 'High' ? 'prio-high' : a.priority === 'Medium' ? 'prio-medium' : 'prio-low';
+      const statusBadge = a.status === 'Completed' ? '<span class="badge bc">✅ Completed</span>'
+        : a.status === 'In Progress' ? '<span class="badge bi">🔄 In Progress</span>'
+        : '<span class="badge bp">⏳ Assigned</span>';
+      return `<div class="assign-card">
+        <div class="assign-top"><strong>${a.staffName}</strong> <span class="cat">${a.branch}</span> ${statusBadge} <span class="prio ${prioClass}">${a.priority} priority</span></div>
+        <div class="assign-desc">${a.task}${a.category ? ` <span class="cat">${a.category}</span>` : ''}</div>
+        <div class="assign-meta">📅 Due: ${a.dueDate} &nbsp;|&nbsp; Assigned by: ${a.supervisor}</div>
+      </div>`;
+    }).join('');
+  } catch (e) { el.innerHTML = `<div class="empty">❌ Error: ${e.message}</div>`; }
+}
+
 // ─── PANEL SWITCH ──────────────────────────────────
 function switchPanel(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
@@ -393,6 +503,7 @@ function switchPanel(name, btn) {
   document.getElementById('p-' + name).classList.add('on');
   btn.classList.add('on');
   // Render lazily
+  if (name === 'assign') { loadAllApprovedStaffForAssign(); loadAllAssignments(); }
   if (name === 'heatmap')     renderHeatmap();
   if (name === 'consistency') renderConsistency();
   if (name === 'branch')      renderBranchComparison();
@@ -838,7 +949,7 @@ function renderAnnual() {
 //  DEMO DATA
 // ══════════════════════════════════════════════════
 function loadDemo() {
-  const branches=['Commissioner','Accountant ','Administrative Officer '];
+  const branches=['Section 1','Section 2'];
   const names=['Kumar S','Priya R','Siva T','Meena K','Raj M','Gowri P','Arjun V','Devi S','Murugan K','Nithya R','Bala S','Kavitha M'];
   const tasks=['Preparing reports','Field survey','Meeting','Letter','Audit','Project task'];
   const cats=['Office Work','Field Work','Meeting','Inspection Work','General Work'];
