@@ -304,9 +304,9 @@ function renderReport(from, to, branch, rows) {
   const compRate    = nonLeave.length > 0 ? Math.round((completed / nonLeave.length) * 100) : 0;
 
   // Format dates
-  const fromFmt = new Date(from).toLocaleDateString('ta-IN', {year:'numeric',month:'long',day:'numeric'});
-  const toFmt   = new Date(to).toLocaleDateString('ta-IN', {year:'numeric',month:'long',day:'numeric'});
-  const genDate = new Date().toLocaleDateString('ta-IN', {year:'numeric',month:'long',day:'numeric'});
+  const fromFmt = new Date(from).toLocaleDateString('en-GB', {year:'numeric',month:'long',day:'numeric'});
+  const toFmt   = new Date(to).toLocaleDateString('en-GB', {year:'numeric',month:'long',day:'numeric'});
+  const genDate = new Date().toLocaleDateString('en-GB', {year:'numeric',month:'long',day:'numeric'});
 
   // ── Branch Summary ──
   const branchMap = {};
@@ -345,7 +345,7 @@ function renderReport(from, to, branch, rows) {
     <div class="r-header">
       <div class="r-logo">🏛️</div>
       <div class="r-org">Department of Motor Traffic</div>
-      <div class="r-sub">Jaffna Municipal Council</div>
+      <div class="r-sub">Northern Province</div>
       <div class="r-title">Daily Duty — Monthly Report</div>
       <div class="r-period">${fromFmt} to ${toFmt} ${branch ? '| ' + branch : ''}</div>
     </div>
